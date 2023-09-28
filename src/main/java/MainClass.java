@@ -4,10 +4,10 @@ import java.util.Collections;
 import java.util.Random;
 
 public class MainClass {
-    public static int PLUS = 1;
-    public static int MINUS = 2;
-    public static int MULTIPLE = 3;
-    public static int DEVICE = 4;
+    public static final int PLUS = 1;
+    public static final int MINUS = 2;
+    public static final int MULTIPLE = 3;
+    public static final int DEVICE = 4;
 
     public static void main(String[] args) {
         // 接受命令行输入
@@ -57,7 +57,7 @@ public class MainClass {
         if (num != 0 && range != 0 && exerciseFilePath == null && answerFilePath == null){
             // 生成
             ArrayList<MathExpression> allExpression = generateAll(num, range);
-            if(allExpression == null){
+            if(allExpression.size() == 0){
                 System.out.println("生成表达式的过程中出错！");
                 System.exit(1);
             }
@@ -77,19 +77,20 @@ public class MainClass {
     }
 
     /**
-     * 生成表达式
+     * 生成num个表达式
      * @param num 生成数量
      * @param range 每个值的大小范围，属于[0,range)
      * @return 返回每个表达式构成的数组
      */
     public static ArrayList<MathExpression> generateAll(int num, int range){
         ArrayList<MathExpression> allExpression = new ArrayList<>();
+        ArrayList<ArrayList<MathExpression>> allExpressionStep = new ArrayList<>();
         while(num > 0){
             // 生成单个表达式
             MathExpression oneExpression;
             // 反复生成，直到不出现错误的表达式
             do{
-                oneExpression = generateOne(range, allExpression);
+                oneExpression = generateOne(range, allExpressionStep);
             }while (oneExpression == null);
             allExpression.add(oneExpression);
             num--;
@@ -100,10 +101,10 @@ public class MainClass {
     /**
      * 生成单个表达式
      * @param range 表达式值的上限
-     * @param allExpression 全部表达式
+     * @param allExpressionStep 全部表达式
      * @return 生成的新表达式
      */
-    public static MathExpression generateOne(int range, ArrayList<MathExpression> allExpression){
+    public static MathExpression generateOne(int range, ArrayList<ArrayList<MathExpression>> allExpressionStep){
         // 随机产生运算符的数目，属于[1,3]
         Random random = new Random();
         int operatorNum = random.nextInt(3) + 1;
@@ -117,9 +118,11 @@ public class MainClass {
         ArrayList<MathExpression> figuresExpression = new ArrayList<>();
         for(int i = 1; i <= numberNum; i++){
             // 创建一个随机数，封装到expression中去
-            String value = Util.generateFraction(range);
-            Figure figure = new Figure(value, value);
-            figuresExpression.add(new MathExpression(figure, value));
+            String valueStr = Util.generateFraction(range);
+            // 计算生成数的值
+            double value = Util.calculateFraction(valueStr);
+            Figure figure = new Figure(value, valueStr);
+            figuresExpression.add(new MathExpression(figure, valueStr));
         }
         // 得到生成多项式的初始优先级
         ArrayList<Integer> rawPriority = getPriority(operators);
@@ -129,13 +132,17 @@ public class MainClass {
         updateBracketAttribute(operators, rawPriority, newPriority);
 
         // 进行计算，考虑到负数和1/0的情况
-        ArrayList<MathExpression> result = calculateResult(figuresExpression, operators, newPriority);
-        // 最后一个元素即为最终整合结果
-
+        ArrayList<MathExpression> newExpressionStep = calculateResult(figuresExpression, operators,
+                newPriority);
+        if (newExpressionStep == null) return null;
+        MathExpression result = newExpressionStep.get(newExpressionStep.size() - 1); // 得到最后一个元素
         // 判断是否重复，重复则重新生成
-
-        //
-        return null;
+        if (judgeRepetitive(newExpressionStep, allExpressionStep)){
+            return null;
+        }
+        allExpressionStep.add(newExpressionStep);
+        // 最后一个元素即为最终整合结果
+        return result;
     }
 
     /**
@@ -214,25 +221,44 @@ public class MainClass {
      */
     public static ArrayList<MathExpression> calculateResult(ArrayList<MathExpression> figuresExpression,
                                           ArrayList<Operator> operators, ArrayList<Integer> newPriority){
+
+        // 创建新数组，复制figuresExpression
+        ArrayList<MathExpression> step = new ArrayList<>();
         // 从优先级高到低计算
         for(int i = 1; i <= newPriority.size(); i++){
-            // 选取当前最小的元素，即优先级最高
+            // 选取当前最小的元素，即优先级最高。它的下标也是表达式左值的下标
             int indexOfMinElement = newPriority.indexOf(Collections.max(newPriority));
-            int indexOfFormerFigure = indexOfMinElement;
             int indexOfLatterFigure = indexOfMinElement + 1; // 下标在运算符加1
             // 计算两个封装后的Figure
+            MathExpression afterIntegration = calculateFigure(figuresExpression.get(indexOfMinElement),
+                    figuresExpression.get(indexOfLatterFigure), operators.get(indexOfMinElement));
+            if (afterIntegration == null) return null;
+            // 去除最小值
+            figuresExpression.remove(indexOfMinElement);
+            // 去除后者，并将新的值赋给前者
+            figuresExpression.set(indexOfMinElement, afterIntegration);
+            figuresExpression.remove(indexOfLatterFigure);
+            step.add(afterIntegration);
         }
-        return null;
+        return step;
     }
 
-
+    /**
+     * 计算单个运算符表达式
+     * @param formerFigure 左值
+     * @param latterFigure 右值
+     * @param operator 运算符
+     * @return 得到的结果
+     */
     public static MathExpression calculateFigure(MathExpression formerFigure, MathExpression latterFigure,
                                                  Operator operator){
         // 计算将得到一个新的表达式
         Figure former = formerFigure.getValue();
         Figure latter = latterFigure.getValue();
         // 计算值
-
+        Figure newFigure = Util.calculateFractionExpression(former, latter, operator);
+        if (newFigure == null) return null;
+        formerFigure.setValue(newFigure);
         // 将表达式合并
         // 检测是否要加括号
         boolean isNeedBracket = operator.isNeedBracket();
@@ -251,5 +277,34 @@ public class MainClass {
             formerFigure.setFormOfFormula(formerForm + operator.getValue() + latterForm);
         }
         return formerFigure;
+    }
+
+    /**
+     * 检测是否存在重复
+     * @param newExpressionStep 生成新的表达式的步骤
+     * @param allExpressionStep 以往生成的全部表达式的步骤
+     * @return true表明重复，false表明不重复
+     */
+    public static boolean judgeRepetitive(ArrayList<MathExpression> newExpressionStep,
+                                          ArrayList<ArrayList<MathExpression>> allExpressionStep){
+        // 将newStep的步骤按照字符串数组读出
+        ArrayList<String> newStep = new ArrayList<>();
+        for (MathExpression me :
+                newExpressionStep) {
+            newStep.add(me.getFormOfFormula());
+        }
+        for (ArrayList<MathExpression> me :
+                allExpressionStep) {
+            ArrayList<String> pastStep = new ArrayList<>();
+            for (MathExpression m :
+                    me) {
+                pastStep.add(m.getFormOfFormula());
+            }
+            // 将两字符串元素进行比较，若完全一样(不包含顺序)，则表明重复
+            if (newStep.containsAll(pastStep) && pastStep.containsAll(newStep)){
+                return true;
+            }
+        }
+        return false;
     }
 }
