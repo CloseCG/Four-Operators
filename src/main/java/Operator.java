@@ -5,9 +5,8 @@ public class Operator {
     public Operator() {
     }
 
-    public Operator(int value, boolean isNeedBracket) {
+    public Operator(int value) {
         this.value = value;
-        this.isNeedBracket = isNeedBracket;
     }
 
     public int getValue() {

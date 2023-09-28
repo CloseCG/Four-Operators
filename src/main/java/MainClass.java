@@ -1,6 +1,13 @@
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Random;
 
 public class MainClass {
+    public static int PLUS = 1;
+    public static int MINUS = 2;
+    public static int MULTIPLE = 3;
+    public static int DEVICE = 4;
+
     public static void main(String[] args) {
         // 接受命令行输入
         int num = 0;
@@ -96,18 +103,82 @@ public class MainClass {
      */
     public static MathExpression generateOne(int range, ArrayList<MathExpression> allExpression){
         // 随机产生运算符的数目，属于[1,3]
-
+        Random random = new Random();
+        int operatorNum = random.nextInt(3) + 1;
+        ArrayList<Operator> operators = new ArrayList<>();
+        for(int i = 1; i <= operatorNum; i++){
+            Operator operator = new Operator(random.nextInt(4) + 1);
+            operators.add(operator);
+        }
         // 产生的数的数量为运算符+1
-
-        // 得到生成多项式的原优先级
-
-        // 得到新的优先级
-
+        int numberNum = operatorNum + 1;
+        ArrayList<MathExpression> figuresExpression = new ArrayList<>();
+        for(int i = 1; i <= numberNum; i++){
+            // 创建一个随机数，封装到expression中去
+            String value = Util.generateFraction(range);
+            Figure figure = new Figure(value, value);
+            figuresExpression.add(new MathExpression(figure, value));
+        }
+        // 得到生成多项式的初始优先级
+        ArrayList<Integer> rawPriority = getPriority(operators);
+        // 得到新的优先级，即随机生成括号
+        ArrayList<Integer> newPriority = generatePriority(rawPriority.size());
         // 进行计算，考虑到负数和1/0的情况
 
         // 判断是否重复，重复则重新生成
 
         //
         return null;
+    }
+
+    /**
+     * 得到运算符的初始优先级
+     * @param operators 运算符数组
+     * @return 优先级数组，其中值越小代表优先级越高
+     */
+    public static ArrayList<Integer> getPriority(ArrayList<Operator> operators){
+        // 规则很简单，分为+-和*/，分别从左自右排优先级
+        int operatorsSize = operators.size();
+        ArrayList<Integer> priority = new ArrayList<>(operatorsSize);
+        int p = 1; // 表明优先级
+        // 先考虑*/的优先级
+        for (int i = 0; i < operatorsSize; i++) {
+            int value = operators.get(i).getValue();
+            if(value == MULTIPLE || value == DEVICE){
+                priority.set(i, p);
+                p++;
+            }
+        }
+        // 先考虑+-的优先级
+        for (int i = 0; i < operatorsSize; i++) {
+            int value = operators.get(i).getValue();
+            if(value == PLUS || value == MINUS){
+                priority.set(i, p);
+                p++;
+            }
+        }
+        return priority;
+    }
+
+    /**
+     * 生成新的优先级
+     * @param size 旧优先级的数量
+     * @return 新优先级数组
+     */
+    public static ArrayList<Integer> generatePriority(int size){
+        ArrayList<Integer> numbers = new ArrayList<>(size);
+        for(int i = 1; i <= size; i++){
+            numbers.set(i, i);
+        }
+        // 使用洗牌算法打乱数组顺序
+        Random rand = new Random();
+        for (int i = size - 1; i > 0; i--) {
+            int j = rand.nextInt(i + 1);
+            // 交换位置
+            int temp = numbers.get(i);
+            numbers.set(i, numbers.get(j));
+            numbers.set(j, temp);
+        }
+        return numbers;
     }
 }

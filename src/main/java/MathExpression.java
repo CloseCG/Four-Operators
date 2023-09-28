@@ -1,20 +1,20 @@
 public class MathExpression {
-    private Number value; // 对应表达式计算得到的值
+    private Figure value; // 对应表达式计算得到的值
     private String formOfFormula; // 表达式的形式
 
     public MathExpression() {
     }
 
-    public MathExpression(Number value, String formOfFormula) {
+    public MathExpression(Figure value, String formOfFormula) {
         this.value = value;
         this.formOfFormula = formOfFormula;
     }
 
-    public Number getValue() {
+    public Figure getValue() {
         return value;
     }
 
-    public void setValue(Number value) {
+    public void setValue(Figure value) {
         this.value = value;
     }
 
