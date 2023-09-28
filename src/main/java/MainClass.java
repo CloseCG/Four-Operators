@@ -1,5 +1,6 @@
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Random;
 
 public class MainClass {
@@ -85,10 +86,11 @@ public class MainClass {
         ArrayList<MathExpression> allExpression = new ArrayList<>();
         while(num > 0){
             // 生成单个表达式
-            MathExpression oneExpression = generateOne(range, allExpression);
-            if (oneExpression == null){
-                return null;
-            }
+            MathExpression oneExpression;
+            // 反复生成，直到不出现错误的表达式
+            do{
+                oneExpression = generateOne(range, allExpression);
+            }while (oneExpression == null);
             allExpression.add(oneExpression);
             num--;
         }
@@ -123,7 +125,12 @@ public class MainClass {
         ArrayList<Integer> rawPriority = getPriority(operators);
         // 得到新的优先级，即随机生成括号
         ArrayList<Integer> newPriority = generatePriority(rawPriority.size());
+        // 检测那些运算符优先级改变，并改变其负责括号的属性
+        updateBracketAttribute(operators, rawPriority, newPriority);
+
         // 进行计算，考虑到负数和1/0的情况
+        ArrayList<MathExpression> result = calculateResult(figuresExpression, operators, newPriority);
+        // 最后一个元素即为最终整合结果
 
         // 判断是否重复，重复则重新生成
 
@@ -180,5 +187,69 @@ public class MainClass {
             numbers.set(j, temp);
         }
         return numbers;
+    }
+
+    /**
+     * 修改运算符的是否需要括号属性，如果优先级改变则修改，反之则不修改
+     * @param operators 运算符数组
+     * @param rawPriority 原始优先级
+     * @param newPriority 新优先级
+     */
+    public static void updateBracketAttribute(ArrayList<Operator> operators, ArrayList<Integer> rawPriority,
+                                              ArrayList<Integer> newPriority){
+        // contrast新旧优先级数组，如果有对应的优先级比初始小，表明其需要括号
+        for(int i = 1; i <= rawPriority.size(); i++){
+            if(newPriority.get(i) < rawPriority.get(i)){
+                operators.get(i).setNeedBracket(true);
+            }
+        }
+    }
+
+    /**
+     * 计算最终的结果
+     * @param figuresExpression 每个封装为MathExpression的数值
+     * @param operators 运算符数组
+     * @param newPriority 新的优先级
+     * @return 每一步计算的表达式，包含表达式的值和字符串形式，按照先后顺序组成了数组
+     */
+    public static ArrayList<MathExpression> calculateResult(ArrayList<MathExpression> figuresExpression,
+                                          ArrayList<Operator> operators, ArrayList<Integer> newPriority){
+        // 从优先级高到低计算
+        for(int i = 1; i <= newPriority.size(); i++){
+            // 选取当前最小的元素，即优先级最高
+            int indexOfMinElement = newPriority.indexOf(Collections.max(newPriority));
+            int indexOfFormerFigure = indexOfMinElement;
+            int indexOfLatterFigure = indexOfMinElement + 1; // 下标在运算符加1
+            // 计算两个封装后的Figure
+        }
+        return null;
+    }
+
+
+    public static MathExpression calculateFigure(MathExpression formerFigure, MathExpression latterFigure,
+                                                 Operator operator){
+        // 计算将得到一个新的表达式
+        Figure former = formerFigure.getValue();
+        Figure latter = latterFigure.getValue();
+        // 计算值
+
+        // 将表达式合并
+        // 检测是否要加括号
+        boolean isNeedBracket = operator.isNeedBracket();
+        String formerForm = former.getForm();
+        String latterForm = latter.getForm();
+        // 如果哪个分母为1，则让其变为整数形式
+        if (formerForm.contains("/1")) {
+            formerForm = formerForm.replace("/1", "");
+        }
+        if (latterForm.contains("/1")) {
+            latterForm = latterForm.replace("/1", "");
+        }
+        if (isNeedBracket){
+            formerFigure.setFormOfFormula("(" + formerForm + operator.getValue() + latterForm + ")");
+        } else {
+            formerFigure.setFormOfFormula(formerForm + operator.getValue() + latterForm);
+        }
+        return formerFigure;
     }
 }
