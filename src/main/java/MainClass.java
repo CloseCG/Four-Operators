@@ -1,4 +1,5 @@
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Random;
 
@@ -167,7 +168,7 @@ public class MainClass {
             String valueStr = Util.generateFraction(range);
             // 计算生成数的值
             double value = Util.calculateFraction(valueStr);
-            Figure figure = new Figure(value, valueStr);
+            Figure figure = new Figure(value, valueStr, valueStr);
             figuresExpression.add(new MathExpression(figure, valueStr));
         }
         // 生成两个初始优先级数组，一个存放×÷，一个存放+-
@@ -276,6 +277,7 @@ public class MainClass {
             // 将前者进行复制，放入列表中
             MathExpression newME = new MathExpression(afterIntegration.getValue(), afterIntegration.getFormOfFormula());
             newME.setNeedSimplify(false);// 标记不需要化简了
+            // 记录步骤
             figuresExpression.set(indexOfFormerElement, newME);
             step.add(afterIntegration);
         }
@@ -349,21 +351,22 @@ public class MainClass {
         ArrayList<String> newStep = new ArrayList<>();
         for (MathExpression me :
                 newExpressionStep) {
-            newStep.add(me.getValue().getForm());
+            newStep.add(me.getValue().getRecordStep());
         }
         for (ArrayList<MathExpression> me :
                 allExpressionStep) {
             ArrayList<String> passedStep = new ArrayList<>();
             for (MathExpression m :
                     me) {
-                passedStep.add(m.getValue().getForm());
+                passedStep.add(m.getValue().getRecordStep());
             }
             // 将两字符串元素进行比较，若完全一样(不包含顺序)，则表明重复
             if (Util.judgeRepeatElement(newStep, passedStep)){
                 System.out.println("出现重复");
                 // 每个记录步骤的最后一步都是完整表达式
-                System.out.println("新生成的表达式为：" + newExpressionStep.get(newExpressionStep.size() - 1) + '\n');
-                System.out.println("与之重复的表达式为：" + me.get(me.size() - 1) + '\n');
+                System.out.println("新生成的表达式为：" + newExpressionStep.
+                        get(newExpressionStep.size() - 1).getFormOfFormula());
+                System.out.println("与之重复的表达式为：" + me.get(me.size() - 1).getFormOfFormula() + '\n');
                 return true;
             }
         }

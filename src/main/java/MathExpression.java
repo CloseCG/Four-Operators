@@ -1,7 +1,6 @@
 public class MathExpression {
     private Figure value; // 对应表达式计算得到的值
     private String formOfFormula; // 表达式的形式
-    private String opA; // 格式：操作数+运算符+操作数
     private boolean isNeedSimplify; // 标记该表达式是否需要化简
 
     public MathExpression() {

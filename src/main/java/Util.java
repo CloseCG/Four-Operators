@@ -1,5 +1,3 @@
-import org.apache.commons.lang.math.Fraction;
-
 import java.io.*;
 import java.util.*;
 import java.util.regex.Matcher;
@@ -69,34 +67,40 @@ public class Util {
         int denominatorF2 = Integer.parseInt(partsF2[1]);
         int numerator = 0;
         int denominator = 0;
+        String operatorStr = "Wrong";
 
         switch (op) {
             case MainClass.PLUS:
+                operatorStr = "+";
                 v = v1 + v2;
                 // 分数相加
                 numerator = numeratorF1 * denominatorF2 + denominatorF1 * numeratorF2;
                 denominator = denominatorF1 * denominatorF2;
                 break;
             case MainClass.MINUS:
+                operatorStr = "-";
                 v = v1 - v2;
                 // 分数相减
                 numerator = numeratorF1 * denominatorF2 - denominatorF1 * numeratorF2;
                 denominator = denominatorF1 * denominatorF2;
                 break;
             case MainClass.MULTIPLE:
+                operatorStr = "×";
                 v = v1 * v2;
                 // 分数相乘
                 numerator = numeratorF1 * numeratorF2;
                 denominator = denominatorF1 * denominatorF2;
                 break;
             case MainClass.DEVICE:
+                operatorStr = "÷";
                 v = v1 / v2;
                 // 分数相除
                 numerator = numeratorF1 * denominatorF2;
                 denominator = denominatorF1 * numeratorF2;
                 break;
         }
-        return new Figure(v, numerator + "/" + denominator);
+        return new Figure(v, numerator + "/" + denominator,
+                Arrays.toString(partsF1) + operatorStr + Arrays.toString(partsF2));
     }
 
     public static String simplifyFraction(String fraction) {
@@ -405,13 +409,14 @@ public class Util {
     }
 
     // 判断是否出现步骤重复
-    public static boolean judgeRepeatElement(ArrayList<String> newStep, ArrayList<String> passedStep){
-        // 如果新step是旧step的子集，那么它们就算重复
+    public static boolean judgeRepeatElement(ArrayList<String> newStep, ArrayList<String> passedStep) {
         for (String expr1 : newStep) {
             boolean found = false;
             for (String expr2 : passedStep) {
                 if (areExpressionsEquivalent(expr1, expr2)) {
                     found = true;
+                    // 去除这个字符串
+                    passedStep.remove(expr2);
                     break;
                 }
             }
@@ -420,8 +425,8 @@ public class Util {
                 return false;
             }
         }
-        // 只有当步骤全部重复时才会返回true
-        return true;
+        // 如果此时passedStep仍有剩余，说明newStep是passedStep的子集，返回false
+        return passedStep.size() <= 0;
     }
 
     private static boolean areExpressionsEquivalent(String expr1, String expr2) {
@@ -429,17 +434,25 @@ public class Util {
             return false;
         }
 
-        // 使用正则表达式将表达式中的加号(+)、减号(-)、乘号(*)和除号(/)作为分隔符进行分割
-        // 判断符号是否一致
+        String[] parts1 = expr1.split("[+\\-×÷]");
+        String[] parts2 = expr2.split("[+\\-×÷]");
 
-        // 判断数值是否一致
-        String[] parts1 = expr1.split("\\+|-|\\*|/");
-        String[] parts2 = expr2.split("\\+|-|\\*|/");
+        // 对分数进行化简
+        for (int i = 0; i < parts1.length; i++) {
+            parts1[i] = simplifyFraction(parts1[i]);
+            parts2[i] = simplifyFraction(parts2[i]);
+        }
+
+        // 此处的排序的作用：由于我们只关注元素是否相同，所以只要元素相同，排序的结果都是一致的
         Arrays.sort(parts1);
         Arrays.sort(parts2);
 
-        return Arrays.equals(parts1, parts2) && expr1.replaceAll("[0-9]", "").
-                equals(expr2.replaceAll("[0-9]", ""));
+        if (expr1.contains("+") || expr1.contains("×")) {
+            // 判断数值一致，以及符号一致
+            return Arrays.equals(parts1, parts2) && expr1.replaceAll("[0-9/]", "").equals(expr2.replaceAll("[0-9/]", ""));
+        } else {
+            return expr1.equals(expr2);
+        }
     }
 
 }
