@@ -1,11 +1,8 @@
 public class Operator {
-    private long id; // 运算符号的id
-    private int value; // 表面运算符号的类型。1:2:3:4 = +:-:×:÷
+    private final long id; // 运算符号的id
+    private final int value; // 表面运算符号的类型。1:2:3:4 = +:-:×:÷
     private boolean isNeedBracket = false; // 标记该运算符两个操作数两侧是否需要括号，true表明需要，false表明不需要
     private int opType = 0; // 为1表示为加减运算符，为2表示为乘除运算符
-
-    public Operator() {
-    }
 
     public Operator(long id, int value) {
         this.id = id;
@@ -22,16 +19,8 @@ public class Operator {
         return id;
     }
 
-    public void setId(long id) {
-        this.id = id;
-    }
-
     public int getValue() {
         return value;
-    }
-
-    public void setValue(int value) {
-        this.value = value;
     }
 
     public boolean isNeedBracket() {

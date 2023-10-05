@@ -3,9 +3,6 @@ public class MathExpression {
     private String formOfFormula; // 表达式的形式
     private boolean isNeedSimplify; // 标记该表达式是否需要化简
 
-    public MathExpression() {
-    }
-
     public MathExpression(Figure value, String formOfFormula) {
         this.value = value;
         this.formOfFormula = formOfFormula;

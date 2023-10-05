@@ -1,5 +1,4 @@
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.Random;
 
@@ -109,11 +108,21 @@ public class MainClass {
                 count++;
             }
             // 存入文件
-            Util.saveToFile("src/Exercises.txt", exercises);
-            Util.saveToFile("src/Answers.txt", answers);
+            if (!Util.saveToFile("src/Exercises.txt", exercises)){
+                System.out.println("写入题目文件失败！");
+                System.exit(1);
+            }
+
+            if (!Util.saveToFile("src/Answers.txt", answers)){
+                System.out.println("写入答案文件失败！");
+                System.exit(1);
+            }
         } else if (num == 0 && range == 0 && exerciseFilePath != null && answerFilePath != null){
             // 检测
-            Util.readAndCalculate(exerciseFilePath, answerFilePath, "Grade.txt");
+            if (!Util.readAndCalculate(exerciseFilePath, answerFilePath, "Grade.txt")){
+                System.out.println("打分过程中出错！");
+                System.exit(1);
+            }
         } else {
             ArgumentsException RException = new ArgumentsException("输入有误！");
             RException.printStackTrace();//打印异常栈追踪信息
@@ -249,7 +258,7 @@ public class MainClass {
         for (Operator op : newPriority) {
             // 按照优先级数组，依次计算
             // 判断是否需要给运算符添加括号
-            if (isNeedToAddBracket(op, mulAndDevPriority, pluAndMinPriority)) {
+            if (isNeedToAddBracket(op, mulAndDevPriority, pluAndMinPriority, referencePosition)) {
                 op.setNeedBracket(true);
             }
             // 在对应的运算符数组中删除本次运算的运算符
@@ -380,14 +389,30 @@ public class MainClass {
      * @param pluAndMinPriority 加减数组
      * @return true表明需要添加括号，false表明不需要添加括号
      */
-    public static boolean isNeedToAddBracket(Operator op, ArrayList<Operator> mulAndDevPriority, ArrayList<Operator> pluAndMinPriority){
+    public static boolean isNeedToAddBracket(Operator op, ArrayList<Operator> mulAndDevPriority,
+                                             ArrayList<Operator> pluAndMinPriority,
+                                             ArrayList<Operator> referencePosition){
         // 判断是否需要括号
         boolean needFlag = false;
         int opType = op.getOpType();
         // 如果是加减运算符则需要判断乘除数组的情况
         if (opType == PlusAndMinTypeMark){
             if (mulAndDevPriority.size() != 0){
-                needFlag = true;
+                if (pluAndMinPriority.size() > 1 && op.getId() == pluAndMinPriority.get(0).getId()){
+                    // 当此操作符为加减数组的首位时，则判断与第二位的是否挨着
+                    long id = pluAndMinPriority.get(1).getId();
+                    // 找到第一位运算符在referencePosition中的下标
+                    int i = referencePosition.indexOf(pluAndMinPriority.get(0));
+                    // 往后找最近的一个运算符，要考虑不要越过下界
+                    int j = i + 1;
+                    if (j < referencePosition.size()){
+                        if (referencePosition.get(j).getId() != id){
+                            needFlag = true;
+                        }
+                    }
+                } else {
+                    needFlag = true;
+                }
             } else {
                 // 设置>1是防止只剩一个运算符时也给两个操作数加括号，因为只剩一个运算符的话，优先级数组首位必然是它自己
                 if (pluAndMinPriority.size() > 1 && op.getId() != pluAndMinPriority.get(0).getId()){
@@ -418,3 +443,4 @@ public class MainClass {
         }
     }
 }
+

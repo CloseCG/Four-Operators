@@ -1,7 +1,4 @@
 public class ArgumentsException extends Exception{
-    public ArgumentsException() {
-    }
-
     /**
      * 打印参数输入的异常
      * @param message 输入参数错误的信息

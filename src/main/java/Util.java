@@ -67,7 +67,7 @@ public class Util {
         int denominatorF2 = Integer.parseInt(partsF2[1]);
         int numerator = 0;
         int denominator = 0;
-        String operatorStr = "Wrong";
+        String operatorStr = "WRONG";
 
         switch (op) {
             case MainClass.PLUS:
@@ -155,6 +155,7 @@ public class Util {
         return a;
     }
 
+    // 将真分数转换为带分数形式
     public static String fractionToMixedNumber(String fraction) {
         // 使用正则表达式提取分子和分母
         String[] parts = fraction.split("/");
@@ -171,14 +172,12 @@ public class Util {
 
         if (remainder == 0) {
             return String.valueOf(wholePart); // 没有余数，直接返回整数部分
-        } else if (numerator == denominator) {
-            return "1"; // 分子等于分母，等于整数1
-        } else {
+        }else {
             return wholePart + "'" + remainder + "/" + denominator; // 带分数形式
         }
     }
 
-    // 将表达式中包含的真分数转换为普通的分数形式
+    // 将表达式中包含的全部带分数转换为普通的分数形式
     public static String convertExpression(String expression) {
         StringBuilder result = new StringBuilder();
         StringBuilder number = new StringBuilder();
@@ -204,7 +203,8 @@ public class Util {
         return result.toString();
     }
 
-    private static String convertFraction(String fraction) {
+    // 将带分数转换为普通的分数形式
+    public static String convertFraction(String fraction) {
         if (fraction.contains("'")) {
             String[] parts = fraction.split("'");
             int integerPart = Integer.parseInt(parts[0]);
@@ -217,7 +217,7 @@ public class Util {
         }
     }
 
-    public static void saveToFile(String fileName, ArrayList<String> strings) {
+    public static boolean saveToFile(String fileName, ArrayList<String> strings) {
         try {
             // 创建文件写入对象
             FileWriter writer = new FileWriter(fileName);
@@ -231,12 +231,16 @@ public class Util {
             writer.close();
 
             System.out.println("数据已成功写入文件 " + fileName);
+
+            return true;
         } catch (IOException e) {
             e.printStackTrace();
         }
+        return false;
     }
 
-    public static void readAndCalculate(String exercisesFilePath, String answersFilePath, String gradeFilePath) {
+    // 读取题目文件、答案文件并计算得分，把得分存储到得分文件中
+    public static boolean readAndCalculate(String exercisesFilePath, String answersFilePath, String gradeFilePath) {
         try (BufferedReader reader = new BufferedReader(new FileReader(exercisesFilePath))) {
             String line;
             ArrayList<Double> exercises = new ArrayList<>();
@@ -259,12 +263,19 @@ public class Util {
             generateGradeReport(correct, wrong, content);
 
             // 保存成绩
-            saveToFile(gradeFilePath, content);
+            if (!saveToFile(gradeFilePath, content)) {
+                System.out.println("成绩保存失败");
+                return false;
+            }
+
+            return true;
         } catch (IOException e) {
             e.printStackTrace();
         }
+        return false;
     }
 
+    // 计算一个表达式的值
     public static double calculate(String expression) {
         Stack<Double> numbers = new Stack<>();
         Stack<Character> operators = new Stack<>();
@@ -317,18 +328,18 @@ public class Util {
     }
 
 
-    private static boolean isOperator(char c) {
+    public static boolean isOperator(char c) {
         return c == '+' || c == '-' || c == '×' || c == '÷';
     }
 
-    private static boolean hasPrecedence(char op1, char op2) {
+    public static boolean hasPrecedence(char op1, char op2) {
         if (op2 == '(' || op2 == ')') {
             return false;
         }
         return (op1 != '×' && op1 != '÷') || (op2 != '+' && op2 != '-');
     }
 
-    private static double applyOperator(char op, double b, double a) {
+    public static double applyOperator(char op, double b, double a) {
         switch (op) {
             case '+':
                 return a + b;
@@ -429,7 +440,8 @@ public class Util {
         return passedStep.size() <= 0;
     }
 
-    private static boolean areExpressionsEquivalent(String expr1, String expr2) {
+    // 判断形式为一个运算符和两个操作数的表达式是否相同
+    public static boolean areExpressionsEquivalent(String expr1, String expr2) {
         if (expr1.length() != expr2.length()) {
             return false;
         }
