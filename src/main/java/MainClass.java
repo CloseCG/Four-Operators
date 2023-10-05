@@ -108,12 +108,12 @@ public class MainClass {
                 count++;
             }
             // 存入文件
-            if (!Util.saveToFile("src/Exercises.txt", exercises)){
+            if (!Util.saveToFile("Exercises.txt", exercises)){
                 System.out.println("写入题目文件失败！");
                 System.exit(1);
             }
 
-            if (!Util.saveToFile("src/Answers.txt", answers)){
+            if (!Util.saveToFile("Answers.txt", answers)){
                 System.out.println("写入答案文件失败！");
                 System.exit(1);
             }
